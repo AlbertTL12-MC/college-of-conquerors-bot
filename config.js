@@ -23,14 +23,33 @@ module.exports = {
   //
   // Example (do not copy these IDs, they're just illustrating the order):
   // RANK_ROLES: [
-  //   '111111111111111111', // Recruit          (lowest)
-  //   '222222222222222222', // Conqueror
-  //   '333333333333333333', // Adept Conqueror
-  //   '444444444444444444', // Elite Conqueror   (highest)
+  //   '1522297590291366119', // Verified         
+  //   '1522238068470583477', // Participant
+  //   '1522238068470583479', // Respected Participant
+  //   '1522238068470583482', // Event Host  
+  //   '1522238068470583485', // Trial Moderator
+  //   '1522238068487356586', // Moderator
+  //   '1522238068487356587', // Trial Administrator
+  //   '1522238068487356588', // Administrator
+  //   '1522238068487356589', // Head Administrator
+  //   '1522309665260834856', // Vice-Chief of Staff
+  //   '1522255928009818284', // Chief of Staff
+  
   // ],
   RANK_ROLES: [
     // add your role IDs here, lowest to highest
-  ],
+     '1522297590291366119', // Verified         
+     '1522238068470583477', // Participant
+     '1522238068470583479', // Respected Participant
+     '1522238068470583482', // Event Host  
+     '1522238068470583485', // Trial Moderator
+     '1522238068487356586', // Moderator
+     '1522238068487356587', // Trial Administrator
+     '1522238068487356588', // Administrator
+     '1522238068487356589', // Head Administrator
+     '1522309665260834856', // Vice-Chief of Staff
+     '1522255928009818284', // Chief of Staff  
+  ], 
 
   COLORS: {
     BAN: 0xE74C3C,
