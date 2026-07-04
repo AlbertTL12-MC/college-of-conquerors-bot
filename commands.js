@@ -4,6 +4,39 @@ const db = require('./db');
 const { getRobloxUser } = require('./roblox');
 const { truncate, getCurrentRankIndex } = require('./utils');
 
+const DISCORD_ID_REGEX = /^\d{17,20}$/;
+
+// Resolves a typed Discord username OR ID into a real user — including
+// people who are no longer in the server. IDs always work (Discord's API
+// can fetch any user by ID). Usernames only work if they're still a
+// current member, since Discord gives bots no general "search anyone by
+// username" endpoint — that's a Discord API limitation, not a bot bug.
+async function resolveDiscordUser(interaction, input) {
+  const trimmed = input.trim().replace(/^@/, '');
+
+  if (DISCORD_ID_REGEX.test(trimmed)) {
+    try {
+      return await interaction.client.users.fetch(trimmed);
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const matches = await interaction.guild.members.fetch({ query: trimmed, limit: 10 });
+    const exact = matches.find(
+      m =>
+        m.user.username.toLowerCase() === trimmed.toLowerCase() ||
+        (m.displayName && m.displayName.toLowerCase() === trimmed.toLowerCase())
+    );
+    if (exact) return exact.user;
+    if (matches.size > 0) return matches.first().user; // closest prefix match fallback
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // Shared helper — used by /ban directly and by /warn's auto-ban
 // at 3 warnings.
@@ -77,7 +110,9 @@ const ban = {
   data: new SlashCommandBuilder()
     .setName('ban')
     .setDescription('Ban a user and log it')
-    .addUserOption(o => o.setName('discord_user').setDescription('The Discord user to ban').setRequired(true))
+    .addStringOption(o =>
+      o.setName('discord_target').setDescription('Their Discord username or ID (ID required if they already left)').setRequired(true)
+    )
     .addStringOption(o => o.setName('roblox_username').setDescription('Their Roblox username').setRequired(true))
     .addStringOption(o => o.setName('reason').setDescription('Reason for the ban').setRequired(true))
     .addIntegerOption(o =>
@@ -93,10 +128,17 @@ const ban = {
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
-    const targetUser = interaction.options.getUser('discord_user');
+    const discordTarget = interaction.options.getString('discord_target');
     const robloxUsername = interaction.options.getString('roblox_username');
     const reason = interaction.options.getString('reason');
     const appealAfterDays = interaction.options.getInteger('appeal_after_days') ?? 0;
+
+    const targetUser = await resolveDiscordUser(interaction, discordTarget);
+    if (!targetUser) {
+      return interaction.editReply(
+        `❌ Could not find a Discord user matching "${discordTarget}". If they've already left the server, use their **Discord ID** (numbers only) instead — usernames only resolve for current members.`
+      );
+    }
 
     const result = await performBan(interaction.guild, {
       targetUser,
